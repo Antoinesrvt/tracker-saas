@@ -1,6 +1,6 @@
 "use client";
 
-import { GoalProvider } from '@/app/contexts/GoalContext';
+import { GoalProvider } from '@/contexts/GoalContext';
 import GoalDetailCard from '../../components/Goal/GoalDetailCard';
 
 export default function TrackerLayout({

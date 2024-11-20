@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { createSupabaseClient } from '@/utils/supabase/client'
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import type { Database } from '@/types/supabase'
 
@@ -8,7 +8,7 @@ export function useWorkspace() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
   const router = useRouter()
-  const supabase = createSupabaseClient()
+  const supabase = getSupabaseBrowserClient();
 
   const fetchWorkspace = useCallback(async () => {
     try {

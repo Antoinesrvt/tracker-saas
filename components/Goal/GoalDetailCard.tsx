@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { useGoal } from "@/app/contexts/GoalContext";
+import { useGoal } from "@/contexts/GoalContext";
 import { GoalHeader } from "./components/GoalHeader";
 import { GoalNavigation, TabType } from "./components/GoalNavigation";
 import { GoalContent } from "./components/GoalContent";

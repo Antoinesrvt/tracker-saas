@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState } from 'react';
 import { Database } from '@/types/supabase';
-import { createSupabaseClient } from '@/utils/supabase/client';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import type { GoalDetails } from '@/types/goals';
 
 type Goal = Database['public']['Tables']['goals']['Row'];
@@ -23,7 +23,7 @@ export function GoalProvider({ children }: { children: React.ReactNode }) {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [goalDetails, setGoalDetails] = useState<GoalDetails | null>(null);
   const [isCardOpen, setIsCardOpen] = useState(false);
-  const supabase = createSupabaseClient();
+  const supabase = getSupabaseBrowserClient();
 
   const fetchGoalDetails = async (goalId: string): Promise<GoalDetails> => {
     // Fetch connections

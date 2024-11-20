@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Plus, ZoomIn, ZoomOut, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GoalCard } from "./new/components/GoalCard";
-import { useGoal } from "@/app/contexts/GoalContext";
+import { useGoal } from "@/contexts/GoalContext";
 import { useGoalCalculations } from "@/hooks/use-goal-calculations";
 import { typeStyles } from "@/types/style";
 import { useGoals } from '@/hooks/use-goals'

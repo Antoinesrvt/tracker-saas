@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { createSupabaseClient } from '@/utils/supabase/client'
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 import type { Database } from '@/types/supabase'
 import { RealtimeChannel } from '@supabase/supabase-js'
 
@@ -14,7 +14,7 @@ export function useGoals(workspaceId?: string) {
   const [goals, setGoals] = useState<GoalWithConnections[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
-  const supabase = createSupabaseClient()
+  const supabase = getSupabaseBrowserClient();
 
   const fetchGoals = useCallback(async () => {
     if (!workspaceId) return
