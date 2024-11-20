@@ -6,10 +6,15 @@ import { Plus, ZoomIn, ZoomOut, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GoalCard } from "./new/components/GoalCard";
 import { useGoal } from "@/contexts/GoalContext";
-import { useGoalCalculations } from "@/hooks/use-goal-calculations";
+import { GoalWithPosition, useGoalCalculations } from "@/hooks/use-goal-calculations";
 import { typeStyles } from "@/types/style";
 import { useGoals } from '@/hooks/use-goals'
 import { useWorkspace } from '@/hooks/use-workspace'
+import { CreateGoalCard } from "./new/components/CreateGoalCard";
+import mockGoals from "./mockGoals";
+import { Database } from "types_db";
+
+type Goal = Database['public']['Tables']['goals']['Row']
 
 const TYPE_LABELS = {
   fondation: "Fondations",
@@ -24,8 +29,20 @@ const CARD_HEIGHT = 120; // Increased from 36 to account for actual card height
 const HORIZONTAL_GAP = 120;  // Increased from 70 for better separation
 const VERTICAL_GAP = 80;    // Increased from 50 for better separation
 
+
 export default function GoalTracker() {
-  const [transform, setTransform] = useState({ scale: 1, x: 0, y: 0 });
+  const types  = ['fondation', 'action', 'strategie', 'vision'];
+  // Calculate initial center position based on window size
+  const [transform, setTransform] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return {
+        scale: 1,
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 4
+      };
+    }
+    return { scale: 1, x: 0, y: 0 };
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [dragStartTime, setDragStartTime] = useState(0);
@@ -34,7 +51,16 @@ export default function GoalTracker() {
   const { openGoalCard } = useGoal();
 
   const { workspace } = useWorkspace()
-  const { goals, loading, error } = useGoals(workspace?.id)
+  const { goals: otherGoals, loading, error } = useGoals(workspace?.id)
+
+  const goals = mockGoals
+  // Move the calculations hook before any early returns    
+  const sectionLabels = types.map((type, index) => ({
+      type,
+      position: {
+        x: index * (CARD_WIDTH + HORIZONTAL_GAP),
+        y: -VERTICAL_GAP
+      }}))
 
   // Early return for loading state
   if (loading) {
@@ -49,23 +75,15 @@ export default function GoalTracker() {
   }
 
   // Early return for error state
-  if (error) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="text-red-500 bg-red-500/10 px-4 py-2 rounded-lg">
-          {error.message}
-        </div>
-      </div>
-    )
-  }
-
-  // Use the calculations hook
-  const {
-    goalsWithPositions,
-    sectionLabels,
-    connections,
-    dimensions,
-  } = useGoalCalculations(goals);
+  // if (error) {
+  //   return (
+  //     <div className="h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+  //       <div className="text-red-500 bg-red-500/10 px-4 py-2 rounded-lg">
+  //         {error.message}
+  //       </div>
+  //     </div>
+  //   )
+  // }
 
   // Gestion du zoom et du pan
   const handleWheel = (e: React.WheelEvent) => {
@@ -116,7 +134,7 @@ export default function GoalTracker() {
       const goalCard = target.closest('[data-goal-id]');
       if (goalCard) {
         const goalId = goalCard.getAttribute('data-goal-id');
-        const goal = goalsWithPositions.find(g => g.id.toString() === goalId);
+        const goal = goals.find(g => g.id.toString() === goalId);
         if (goal) {
           openGoalCard(goal);
         }
@@ -124,39 +142,9 @@ export default function GoalTracker() {
     }
   };
 
-  const renderConnections = () => {
-    return connections.map((connection) => {
-      if (!connection) return null;
-      // const { id, source, target, type } = connection;
-
-      // Calculate the actual connection points
-      // const startX = source.x + CARD_WIDTH; // Start from right edge of source
-      // const startY = source.y + CARD_HEIGHT / 2; // Middle of card
-      // const endX = target.x; // End at left edge of target
-      // const endY = target.y + CARD_HEIGHT / 2; // Middle of card
-
-      // Calculate control points for a smooth curve
-      // const midX = (startX + endX) / 2;
-      
-      // return (
-      //   <path
-      //     key={id}
-      //     d={`M ${startX} ${startY} 
-      //         C ${midX} ${startY},
-      //           ${midX} ${endY},
-      //           ${endX} ${endY}`}
-      //     className={`${typeStyles[type].connection} fill-none stroke-2`}
-      //     strokeDasharray="5,5"
-      //     style={{ opacity: 0.6 }}
-      //   />
-      // );
-   return null
-    });
-  };
-
-  // Update the section labels positioning
-  const renderSectionLabels = () => {
-    return sectionLabels.map(({ type, position }) => (
+  const renderSectionLabel = (type: string) => {
+    const position = sectionLabels.find(label => label.type === type)?.position || { x: 0, y: 0 };
+    return (
       <React.Fragment key={type}>
         <div
           className="absolute flex flex-col items-center gap-2"
@@ -167,7 +155,7 @@ export default function GoalTracker() {
           }}
         >
           <h2 className="text-white/70 font-medium text-sm tracking-wider uppercase">
-            {TYPE_LABELS[type]}
+            {TYPE_LABELS[type as keyof typeof TYPE_LABELS]}
           </h2>
           <div className="h-[20px] w-[1px] bg-gradient-to-b from-white/20 to-transparent" />
         </div>
@@ -182,12 +170,18 @@ export default function GoalTracker() {
           />
         )}
       </React.Fragment>
-    ));
+    )
   };
 
-  // Update the canvas container to ensure proper centering
+  // Group goals by type
+  const groupedGoals = goals.reduce((acc, goal) => {
+    if (!acc[goal.type]) acc[goal.type] = [];
+    acc[goal.type].push(goal);
+    return acc;
+  }, {} as Record<string, Goal[]>);
+
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative">
       <div className="fixed top-4 left-4 z-20 flex gap-2">
         <Button
           variant="ghost"
@@ -228,39 +222,35 @@ export default function GoalTracker() {
           className="relative w-full h-full"
           style={{
             transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
-            transformOrigin: "0 0",
-            transition: isDragging ? "none" : "transform 0.1s ease-out",
+            transformOrigin: '0 0',
+            transition: isDragging ? 'none' : 'transform 0.1s ease-out'
           }}
         >
-          {/* Center the content initially */}
-          <div 
-            className="absolute"
-            style={{
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)'
-            }}
-          >
+          {/* Centering Section Labels
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2">
             {renderSectionLabels()}
-            <svg 
-              className="absolute inset-0 w-full h-full pointer-events-none"
-              style={{
-                width: dimensions.width + HORIZONTAL_GAP,
-                height: dimensions.height + VERTICAL_GAP,
-                left: -HORIZONTAL_GAP/2,
-                top: -VERTICAL_GAP/2,
-              }}
-            >
-              {renderConnections()}
-            </svg>
-            {goalsWithPositions.map((goal) => (
-              <div key={goal.id} data-goal-id={goal.id}>
-                <GoalCard
-                  goal={goal}
-                  styles={typeStyles[goal.type]}
-                  onOpen={openGoalCard}
-                  position={goal.position}
-                />
+          </div> */}
+
+          {/* Render goals in a flexbox layout */}
+          <div className="flex justify-between">
+            {Object.entries(groupedGoals).map(([type, goals]) => (
+              <div key={type} className="flex flex-col mb-8 w-1/4">
+                {renderSectionLabel(type)}
+                <div className="flex flex-col gap-4">
+                  {/* Add CreateGoalCard for the "fondation" type */}
+
+                  {goals.map((goal) => (
+                    <GoalCard
+                      key={goal.id}
+                      goal={goal}
+                      styles={typeStyles[goal.type]}
+                      onOpen={openGoalCard}
+                    />
+                  ))}
+                  {type === 'fondation' && (
+                    <CreateGoalCard workspaceId={workspace?.id || ''} />
+                  )}
+                </div>
               </div>
             ))}
           </div>

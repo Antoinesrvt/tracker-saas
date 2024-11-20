@@ -195,6 +195,8 @@ export type Database = {
           id: string
           level: number
           parent_goal_id: string | null
+          position_x: number
+          position_y: number
           progress: number
           start_date: string | null
           status: Database["public"]["Enums"]["goal_status"]
@@ -212,6 +214,8 @@ export type Database = {
           id?: string
           level?: number
           parent_goal_id?: string | null
+          position_x?: number
+          position_y?: number
           progress?: number
           start_date?: string | null
           status?: Database["public"]["Enums"]["goal_status"]
@@ -229,6 +233,8 @@ export type Database = {
           id?: string
           level?: number
           parent_goal_id?: string | null
+          position_x?: number
+          position_y?: number
           progress?: number
           start_date?: string | null
           status?: Database["public"]["Enums"]["goal_status"]

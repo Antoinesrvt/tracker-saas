@@ -70,6 +70,10 @@ CREATE TABLE goals (
     CONSTRAINT valid_title CHECK (char_length(title) >= 2)
 );
 
+ALTER TABLE goals
+ADD COLUMN position_x FLOAT NOT NULL DEFAULT 0,
+ADD COLUMN position_y FLOAT NOT NULL DEFAULT 0;
+
 -- Add moddatetime triggers
 CREATE TRIGGER handle_updated_at_workspaces
     BEFORE UPDATE ON workspaces

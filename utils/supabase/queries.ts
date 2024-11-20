@@ -166,3 +166,8 @@ export const createWorkspaceWithOrg = async (
     throw error;
   }
 };
+
+export const createGoal = async (supabase: SupabaseClient, goal: Database['public']['Tables']['goals']['Insert']) => {
+  const { data: newGoal, error } = await supabase.from('goals').insert(goal).select().single();
+  return newGoal;
+};

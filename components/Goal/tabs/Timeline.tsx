@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/Button/index";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui copy/dialog";
-import { Progress } from "@/components/ui copy/progress";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 import { TimelineTabProps } from "./timeline/types";
 import { MilestoneCard } from "./timeline/components/MilestoneCard";
 import { AddMilestoneForm } from "./timeline/components/AddMilestoneForm";

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { Database } from '@/types/supabase';
+import {Database} from "types_db"
 
 type Goal = Database['public']['Tables']['goals']['Row'];
 type GoalConnection = Database['public']['Tables']['goal_connections']['Row'];
@@ -12,7 +12,7 @@ export interface Position {
   y: number;
 }
 
-interface GoalWithPosition extends Goal {
+export interface GoalWithPosition extends Goal {
   position: Position;
   connections: GoalConnection[];
 }
