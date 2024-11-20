@@ -20,9 +20,15 @@ export default function Navlinks({ user }: NavlinksProps) {
     <div className="relative flex flex-row justify-between py-4 align-center md:py-6 bg-transparent">
       <div className="flex items-center flex-1">
         <nav className="mr-24 space-x-2 lg:block">
-          <Link href="/pricing" className={s.link}>
-            Pricing
-          </Link>
+          {!user ? (
+            <Link href="/pricing" className={s.link}>
+              Pricing
+            </Link>
+          ) : (
+            <Link href="/dashboard" className={s.link}>
+              Dashboard
+            </Link>
+          )}
           {user && (
             <Link href="/account" className={s.link}>
               Account

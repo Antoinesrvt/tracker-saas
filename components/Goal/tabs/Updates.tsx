@@ -23,24 +23,24 @@ import {
   FileText,
   InboxIcon,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/Card/index";
-import { Input } from "@/components/ui/Input/index";
-import { Button } from "@/components/ui/Button/index";
-import { Alert, AlertDescription } from "@/components/ui copy/alert";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui copy/dropdown-menu";
-import { Textarea } from "@/components/ui copy/textarea";
+} from "@/components/ui/dropdown-menu";
+import { Textarea } from "@/components/ui/textarea";
 import { EventUpdate, ObjectUpdate, Update, UpdateAttachment, UpdateObjectType, User } from "../../../types";
 import { EventUpdateCard } from "./updates/EventUpdateCard";
 import { ObjectUpdateCard } from "./updates/ObjectUpdateCard";
 import EmojiPicker from 'emoji-picker-react';
-import { Dialog, DialogContent } from "@/components/ui copy/dialog";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui copy/drawer";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 

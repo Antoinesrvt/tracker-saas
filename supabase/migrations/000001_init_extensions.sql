@@ -1,4 +1,9 @@
- -- Enable necessary extensions
+-- Enable extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 CREATE EXTENSION IF NOT EXISTS "moddatetime";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- Create schemas
+CREATE SCHEMA IF NOT EXISTS audit;
+CREATE SCHEMA IF NOT EXISTS core;

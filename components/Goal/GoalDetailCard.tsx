@@ -2,20 +2,17 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { useGoal } from "@/contexts/GoalContext";
+import { useGoal } from "@/app/contexts/GoalContext";
 import { GoalHeader } from "./components/GoalHeader";
 import { GoalNavigation, TabType } from "./components/GoalNavigation";
 import { GoalContent } from "./components/GoalContent";
-import { typeStyles } from "@/app/dashboard/new/mockData";
-import { mockGoalDetails } from "@/app/dashboard/new/mockedDetails";
-import { GoalDetails } from "@/types/goals";
+import { typeStyles } from "@/types/style";
 
 const GoalDetailCard = () => {
-  const { selectedGoal, isCardOpen, goalDetails, closeGoalCard } = useGoal();
+  const { selectedGoal, goalDetails, isCardOpen, closeGoalCard } = useGoal();
   const [activeTab, setActiveTab] = useState<TabType>("overview");
 
-
-  if (!isCardOpen || !selectedGoal) return null;
+  if (!isCardOpen || !selectedGoal || !goalDetails) return null;
 
   const styles = typeStyles[selectedGoal.type];
 
@@ -37,9 +34,9 @@ const GoalDetailCard = () => {
           duration: 0.3,
         }}
       >
-        <GoalHeader
+        {/* <GoalHeader
           goal={selectedGoal}
-          goalDetails={mockGoalDetails as unknown as GoalDetails}
+          goalDetails={goalDetails}
           styles={styles}
           onClose={closeGoalCard}
         />
@@ -52,9 +49,9 @@ const GoalDetailCard = () => {
 
         <GoalContent
           activeTab={activeTab}
-          goalDetails={mockGoalDetails as unknown as GoalDetails}
+          goalDetails={goalDetails}
           styles={styles}
-        />
+        /> */}
       </motion.div>
     </div>
   );
