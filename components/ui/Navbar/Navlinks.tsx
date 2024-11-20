@@ -7,6 +7,7 @@ import Logo from '@/components/icons/Logo';
 import { usePathname, useRouter } from 'next/navigation';
 import { getRedirectMethod } from '@/utils/auth-helpers/settings';
 import s from './Navbar.module.css';
+import { Button } from '../button';
 
 interface NavlinksProps {
   user?: any;
@@ -16,13 +17,10 @@ export default function Navlinks({ user }: NavlinksProps) {
   const router = getRedirectMethod() === 'client' ? useRouter() : null;
 
   return (
-    <div className="relative flex flex-row justify-between py-4 align-center md:py-6">
+    <div className="relative flex flex-row justify-between py-4 align-center md:py-6 bg-transparent">
       <div className="flex items-center flex-1">
-        <Link href="/" className={s.logo} aria-label="Logo">
-          <Logo />
-        </Link>
-        <nav className="ml-6 space-x-2 lg:block">
-          <Link href="/" className={s.link}>
+        <nav className="mr-24 space-x-2 lg:block">
+          <Link href="/pricing" className={s.link}>
             Pricing
           </Link>
           {user && (
@@ -41,9 +39,17 @@ export default function Navlinks({ user }: NavlinksProps) {
             </button>
           </form>
         ) : (
-          <Link href="/signin" className={s.link}>
-            Sign In
-          </Link>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              className="text-white/70 hover:text-white hover:bg-white/10"
+            >
+              <Link href="/signin">Se connecter</Link>
+            </Button>
+            <Button className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white">
+              <Link href="/signin/signup">S'inscrire</Link>
+            </Button>
+          </div>
         )}
       </div>
     </div>

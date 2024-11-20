@@ -1,6 +1,6 @@
 'use client';
 
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import React from 'react';
 import Link from 'next/link';
 import { signUp } from '@/utils/auth-helpers/server';
@@ -55,10 +55,10 @@ export default function SignUp({ allowEmail, redirectMethod }: SignUpProps) {
             />
           </div>
           <Button
-            variant="slim"
+            variant="secondary"
             type="submit"
             className="mt-1"
-            loading={isSubmitting}
+            disabled={isSubmitting}
           >
             Sign up
           </Button>
@@ -72,7 +72,10 @@ export default function SignUp({ allowEmail, redirectMethod }: SignUpProps) {
       </p>
       {allowEmail && (
         <p>
-          <Link href="/signin/email_signin" className="font-light text-sm">
+          <Link
+            href="/signin/email_signin"
+            className="font-light text-sm"
+          >
             Sign in via magic link
           </Link>
         </p>

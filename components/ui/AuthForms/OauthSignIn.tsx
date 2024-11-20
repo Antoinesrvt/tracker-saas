@@ -1,6 +1,6 @@
 'use client';
 
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { signInWithOAuth } from '@/utils/auth-helpers/client';
 import { type Provider } from '@supabase/supabase-js';
 import { Github } from 'lucide-react';
@@ -39,10 +39,10 @@ export default function OauthSignIn() {
         >
           <input type="hidden" name="provider" value={provider.name} />
           <Button
-            variant="slim"
+            variant="secondary"
             type="submit"
             className="w-full"
-            loading={isSubmitting}
+            disabled={isSubmitting}
           >
             <span className="mr-2">{provider.icon}</span>
             <span>{provider.displayName}</span>
