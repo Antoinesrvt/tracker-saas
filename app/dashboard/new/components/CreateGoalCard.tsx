@@ -16,26 +16,67 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { Database } from '@/types/supabase';
+import { Database } from 'types_db';
 import { Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
+import { createGoal } from '@/utils/supabase/queries';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 type Priority = Database['public']['Enums']['task_priority'];
 
 export const CreateGoalCard = ({ workspaceId }: { workspaceId: string }) => {
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const supabase = getSupabaseBrowserClient();
+  const { toast } = useToast();
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     date: '',
-    priority: 'medium'
+    priority: 'medium' as Priority
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle goal creation logic here
-    setOpen(false);
+    setLoading(true);
+
+    try {
+      const goal = await createGoal(supabase, {
+        workspace_id: workspaceId,
+        title: formData.title,
+        description: formData.description,
+        end_date: formData.date,
+        status: "active",
+        progress: 0,
+        type: "fondation",
+        config_id: ""
+      });
+
+      toast({
+        title: "Goal created",
+        description: "Your goal has been created successfully.",
+      });
+
+      setOpen(false);
+      setFormData({
+        title: '',
+        description: '',
+        date: '',
+        priority: 'medium'
+      });
+    } catch (error) {
+      console.error('Error creating goal:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create goal. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -144,12 +185,14 @@ export const CreateGoalCard = ({ workspaceId }: { workspaceId: string }) => {
                 variant="outline"
                 onClick={() => setOpen(false)}
                 className="bg-white/5 hover:bg-white/10 text-white border-white/10"
+                disabled={loading}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 className="bg-blue-500 hover:bg-blue-600 text-white"
+                disabled={loading}
               >
                 Create
               </Button>
