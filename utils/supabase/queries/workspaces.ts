@@ -85,12 +85,55 @@ export const getWorkspacesByOrganizationId = cache(async (
   return workspaces;
 });
 
-export const createWorkspace = async (
+
+export const createWorkspace= async (
   supabase: SupabaseClient,
-  workspace: NewWorkspace
-): Promise<Workspace> => {
-  const { data: newWorkspace, error } = await supabase.from('workspaces').insert(workspace).select().single();
-  if (error) throw new Error(`Failed to create workspace: ${error.message}`);
-  if (!newWorkspace) throw new Error('Failed to create workspace');
-  return newWorkspace;
+  name: string,
+  userId: string,
+  organizationId: string
+) => {
+  console.log('Starting workspace creation...', { name, userId });
+
+  try {
+
+    // Create workspace
+    const { data: workspace, error: wsError } = await supabase
+      .from('workspaces')
+      .insert({
+        name,
+        organization_id: organizationId,
+        settings: {},
+        is_active: true
+      })
+      .select()
+      .single();
+
+    if (wsError) {
+      console.error('Workspace creation failed:', wsError);
+      throw wsError;
+    }
+
+    console.log('Workspace created:', workspace);
+
+    // Create team assignment
+    const { error: assignError } = await supabase
+      .from('team_assignments')
+      .insert({
+        user_id: userId,
+        assignable_type: 'workspace',
+        assignable_id: workspace.id,
+        role: 'owner'
+      });
+
+    if (assignError) {
+      console.error('Team assignment failed:', assignError);
+      throw assignError;
+    }
+
+    console.log('Team assignment created');
+    return workspace;
+  } catch (error) {
+    console.error('Workspace creation failed:', error);
+    throw error;
+  }
 };

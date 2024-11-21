@@ -40,7 +40,7 @@ const upsertPriceRecord = async (
   retryCount = 0,
   maxRetries = 3
 ) => {
-  const priceData: Price = {
+  const priceData: Omit<Price, 'description'> = {
     id: price.id,
     product_id: typeof price.product === 'string' ? price.product : '',
     active: price.active,
@@ -49,7 +49,8 @@ const upsertPriceRecord = async (
     unit_amount: price.unit_amount ?? null,
     interval: price.recurring?.interval ?? null,
     interval_count: price.recurring?.interval_count ?? null,
-    trial_period_days: price.recurring?.trial_period_days ?? TRIAL_PERIOD_DAYS
+    trial_period_days: price.recurring?.trial_period_days ?? TRIAL_PERIOD_DAYS,
+    metadata: price.metadata
   };
 
   const { error: upsertError } = await supabaseAdmin

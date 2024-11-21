@@ -173,6 +173,20 @@ export const createWorkspaceWithOrg = async (
       throw assignError;
     }
 
+       const { error: newAssignError } = await supabase
+         .from('team_assignments')
+         .insert({
+           user_id: userId,
+           assignable_type: 'workspace',
+           assignable_id: workspace.id,
+           role: 'owner'
+         });
+
+    if (newAssignError) {
+      console.error('Team assignment failed:', newAssignError);
+      throw newAssignError;
+    }
+
     console.log('Team assignment created');
     return workspace;
   } catch (error) {
@@ -180,6 +194,7 @@ export const createWorkspaceWithOrg = async (
     throw error;
   }
 };
+
 
 export const createGoal = async (supabase: SupabaseClient, goal: Database['public']['Tables']['goals']['Insert']) => {
   const { data: newGoal, error } = await supabase.from('goals').insert(goal).select().single();

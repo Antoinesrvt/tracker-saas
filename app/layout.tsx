@@ -6,7 +6,8 @@ import { PropsWithChildren, Suspense } from 'react';
 import { getURL } from '@/utils/helpers';
 import 'styles/main.css';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { GoalProvider } from '@/contexts/GoalContext';
+import { ItemProvider } from '@/contexts/ItemContext';
+import GoalDetailComponent from '@/components/Goal/GoalDetailCard';
 
 const title = 'Next.js Subscription Starter';
 const description = 'Brought to you by Vercel, Stripe, and Supabase.';
@@ -30,9 +31,13 @@ export default async function RootLayout({ children }: PropsWithChildren) {
           id="skip"
           className="min-h-[calc(100dvh-4rem)] md:min-h[calc(100dvh-5rem)]"
         >
-          <AuthProvider>
-            <GoalProvider>{children}</GoalProvider>
-          </AuthProvider>
+         
+              <AuthProvider>
+                   <ItemProvider>
+                {children}
+                <GoalDetailComponent />
+                </ItemProvider>
+              </AuthProvider>
         </main>
         <Suspense>
           <Toaster />

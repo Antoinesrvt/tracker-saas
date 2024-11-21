@@ -1,43 +1,44 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
-import { useRouter } from 'next/navigation'
-import type { Database } from '@/types/supabase'
+import type { Database } from 'types_db'
+import { getGoals } from '@/utils/supabase/queries/goals'
+import { getTeamAssignmentsForWorkspace } from '@/utils/supabase/queries/teamAssignments'
+import { getWorkspace } from '@/utils/supabase/queries/workspaces'
 
-export function useWorkspace() {
+export function useWorkspace(workspaceId: string) {
   const [workspace, setWorkspace] = useState<Database['public']['Tables']['workspaces']['Row'] | null>(null)
+  const [goals, setGoals] = useState<Database['public']['Tables']['goals']['Row'][]>([])
+  const [teams, setTeams] = useState<Database['public']['Tables']['team_assignments']['Row'][]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
-  const router = useRouter()
   const supabase = getSupabaseBrowserClient();
 
-  const fetchWorkspace = useCallback(async () => {
+  const fetchWorkspaceData = useCallback(async () => {
     try {
       setLoading(true)
-      const { data: workspace, error: workspaceError } = await supabase
-        .from('workspaces')
-        .select('*, organization:organizations(*)')
-        .limit(1)
-        .single()
+      const workspaceData = await getWorkspace(supabase, workspaceId)
+      setWorkspace(workspaceData)
 
-      if (workspaceError) {
-        if (workspaceError.code === 'PGRST116') { // No data found
-          router.push('/workspace/new')
-          return
-        }
-        throw workspaceError
-      }
+      const goalsData = await getGoals(supabase, workspaceId)
+      setGoals(goalsData)
 
-      setWorkspace(workspace)
+      const teamAssignmentsData = await getTeamAssignmentsForWorkspace(
+        supabase,
+        workspaceId
+      );
+      setTeams(teamAssignmentsData)
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch workspace'))
+      setError(err instanceof Error ? err : new Error('Failed to fetch workspace data'))
     } finally {
       setLoading(false)
     }
-  }, [router])
+  }, [supabase, workspaceId])
 
   useEffect(() => {
-    fetchWorkspace()
-  }, [fetchWorkspace])
+    if (workspaceId) {
+      fetchWorkspaceData()
+    }
+  }, [fetchWorkspaceData, workspaceId])
 
-  return { workspace, loading, error, refetch: fetchWorkspace }
+  return { workspace, goals, teams, loading, error, refetch: fetchWorkspaceData }
 } 

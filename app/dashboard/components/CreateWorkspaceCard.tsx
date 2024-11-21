@@ -10,6 +10,7 @@ import { getSupabaseBrowserClient } from "@/utils/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CreateWorkspaceCardProps {
   organizationId: string;
@@ -21,18 +22,14 @@ export const CreateWorkspaceCard = ({ organizationId }: CreateWorkspaceCardProps
   const [name, setName] = useState('');
   const supabase = getSupabaseBrowserClient();
   const { toast } = useToast();
-
+  const { user } = useAuth();
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     setLoading(true);
 
     try {
-      await createWorkspace(supabase, {
-        name,
-        organization_id: organizationId,
-        settings: {},
-        is_active: true
-      });
+      await createWorkspace(supabase, name, user.id, organizationId);
 
       toast({
         title: "Workspace created",
