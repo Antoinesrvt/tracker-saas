@@ -11,8 +11,9 @@ import { typeStyles } from "@/types/style";
 import { useGoals } from '@/hooks/use-goals'
 import { useWorkspace } from '@/hooks/use-workspace'
 import { CreateGoalCard } from "../components/CreateGoalCard";
-import mockGoals from "../../mockGoals";
+import mockGoals from "../../dashboard/mockGoals";
 import { Database } from "types_db";
+import { useRouter } from 'next/navigation';
 
 type Goal = Database['public']['Tables']['goals']['Row']
 
@@ -61,6 +62,8 @@ export default function GoalTracker() {
         x: index * (CARD_WIDTH + HORIZONTAL_GAP),
         y: -VERTICAL_GAP
       }}))
+
+  const router = useRouter();
 
   // Early return for loading state
   if (loading) {
@@ -183,6 +186,15 @@ export default function GoalTracker() {
   return (
     <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative">
       <div className="fixed top-4 left-4 z-20 flex gap-2">
+        <Button
+          variant="ghost"
+          size="default"
+          className="bg-white/10 hover:bg-white/20"
+          onClick={() => router.push('/dashboard')}
+        >
+          <span className="text-white">Dashboard</span>
+        </Button>
+
         <Button
           variant="ghost"
           size="icon"

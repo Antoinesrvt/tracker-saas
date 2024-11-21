@@ -1,9 +1,9 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, AlertCircle } from "lucide-react";
+import { Plus, AlertCircle, Goal } from "lucide-react";
 import { motion } from "framer-motion";
-import type { Database } from "@/types/supabase";
 import type { Position } from "@/hooks/use-goal-calculations";
+import { Database } from "@/types_db";
 
 type Goal = Database['public']['Tables']['goals']['Row'];
 type GoalStatus = Database['public']['Enums']['goal_status'];

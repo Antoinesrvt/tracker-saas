@@ -6,6 +6,7 @@ import { PropsWithChildren, Suspense } from 'react';
 import { getURL } from '@/utils/helpers';
 import 'styles/main.css';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { GoalProvider } from '@/contexts/GoalContext';
 
 const title = 'Next.js Subscription Starter';
 const description = 'Brought to you by Vercel, Stripe, and Supabase.';
@@ -30,7 +31,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
           className="min-h-[calc(100dvh-4rem)] md:min-h[calc(100dvh-5rem)]"
         >
           <AuthProvider>
-            {children}
+            <GoalProvider>{children}</GoalProvider>
           </AuthProvider>
         </main>
         <Suspense>

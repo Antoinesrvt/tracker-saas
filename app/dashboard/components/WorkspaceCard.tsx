@@ -12,9 +12,10 @@ interface WorkspaceCardProps {
 export const WorkspaceCard = ({ workspace, organizationId }: WorkspaceCardProps) => {
   return (
     <Link href={`/workspace/${workspace.id}`}>
-      <Card className="
-        backdrop-blur-xl
-        bg-white/5 border-white/10 border
+      <Card
+        className="
+        backdrop-blur-xl bg-white/5
+        border-white/10 border
         hover:border-white/20 rounded-xl
         transition-all duration-300 ease-in-out
         hover:shadow-lg hover:shadow-black/20
@@ -22,7 +23,9 @@ export const WorkspaceCard = ({ workspace, organizationId }: WorkspaceCardProps)
         cursor-pointer
         relative
         h-[130px]
-      ">
+        opacity-100
+      "
+      >
         <CardContent className="p-4 h-full flex flex-col justify-between">
           <div>
             <div className="text-white/60 text-sm mb-1 flex items-center gap-2">
