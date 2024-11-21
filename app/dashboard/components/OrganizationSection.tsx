@@ -12,7 +12,7 @@ interface OrganizationSectionProps {
 }
 
 export const OrganizationSection = ({ organization }: OrganizationSectionProps) => {
-  const { workspace, loading } = useAuth();
+  const { workspaces, loading } = useAuth();
 
   if (loading) {
     return (
@@ -44,12 +44,13 @@ export const OrganizationSection = ({ organization }: OrganizationSectionProps) 
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {workspace && (
+        {workspaces && workspaces.map((workspace) => (
           <WorkspaceCard
+            key={workspace.id}
             workspace={workspace}
             organizationId={organization.id}
           />
-        )}
+        ))}
         <CreateWorkspaceCard organizationId={organization.id} />
       </div>
     </motion.section>

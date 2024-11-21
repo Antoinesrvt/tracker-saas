@@ -759,6 +759,7 @@ export type Database = {
           is_active: boolean
           name: string
           organization_id: string
+          owner_id: string | null
           settings: Json
           updated_at: string
         }
@@ -768,6 +769,7 @@ export type Database = {
           is_active?: boolean
           name: string
           organization_id: string
+          owner_id?: string | null
           settings?: Json
           updated_at?: string
         }
@@ -777,6 +779,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           organization_id?: string
+          owner_id?: string | null
           settings?: Json
           updated_at?: string
         }

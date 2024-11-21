@@ -54,20 +54,18 @@ export const getWorkspace = cache(async (
 export const getUserWorkspaces = cache(async (
   supabase: SupabaseClient
 ): Promise<Workspace[]> => {
-  const { data: orgAssignments } = await supabase
-    .from('team_assignments')
-    .select('assignable_id')
-    .eq('assignable_type', 'organization');
 
-  if (!orgAssignments?.length) return [];
+  const userId = (await supabase.auth.getUser()).data.user?.id;
 
-  const organizationIds = orgAssignments.map(a => a.assignable_id);
+  console.log("userId", userId);
 
   const { data: workspaces, error } = await supabase
     .from('workspaces')
     .select('*')
-    .in('organization_id', organizationIds)
-    .eq('is_active', true);
+    .eq('owner_id', userId);
+
+  console.log("workspaces", workspaces);
+
 
   if (error) throw new Error(`Failed to fetch workspaces: ${error.message}`);
 

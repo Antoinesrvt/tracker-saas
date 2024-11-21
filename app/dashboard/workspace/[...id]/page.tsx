@@ -4,13 +4,13 @@ import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Plus, ZoomIn, ZoomOut, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { GoalCard } from "../../new/components/GoalCard";
+import { GoalCard } from "../components/GoalCard";
 import { useGoal } from "@/contexts/GoalContext";
 import { GoalWithPosition, useGoalCalculations } from "@/hooks/use-goal-calculations";
 import { typeStyles } from "@/types/style";
 import { useGoals } from '@/hooks/use-goals'
 import { useWorkspace } from '@/hooks/use-workspace'
-import { CreateGoalCard } from "../../new/components/CreateGoalCard";
+import { CreateGoalCard } from "../components/CreateGoalCard";
 import mockGoals from "../../mockGoals";
 import { Database } from "types_db";
 
