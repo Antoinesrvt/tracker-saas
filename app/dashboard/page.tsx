@@ -5,11 +5,39 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Organization } from '@/utils/supabase/queries/organizations';
 import { OrganizationSection } from './components/OrganizationSection';
 import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 
 export default function Page() {
   const { organizations, loading, userDetails } = useAuth();
 
+  const [isStalled, setIsStalled] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading) {
+        setIsStalled(true);
+      }
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [loading]);
+
   if (loading) {
+    if (isStalled) {
+      return (
+        <div className="p-6 text-center text-white/60">
+          <p>Taking longer than expected...</p>
+          <Button
+            variant="ghost"
+            onClick={() => window.location.reload()}
+            className="mt-4"
+          >
+            Refresh Page
+          </Button>
+        </div>
+      );
+    }
     return <DashboardSkeleton />;
   }
 

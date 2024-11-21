@@ -16,7 +16,9 @@ export default function Layout({
         <SideNav />
         <div className="pl-64">
           <TopBar />
-          <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+          <main className="min-h-[calc(100vh-4rem)] backdrop-blur-xl bg-black/50">
+            {children}
+          </main>
         </div>
       </div>
     </div>

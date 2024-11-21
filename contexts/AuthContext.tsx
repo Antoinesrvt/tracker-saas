@@ -11,6 +11,7 @@ import {
   getUserDetails,
 } from '@/utils/supabase/queries';
 import { getUserOrganizations } from '@/utils/supabase/queries/organizations';
+import { getUserWorkspaces } from '@/utils/supabase/queries/workspaces';
 
 type Workspace = Database['public']['Tables']['workspaces']['Row'];
 type Organization = Database['public']['Tables']['organizations']['Row'];
@@ -20,7 +21,7 @@ interface AuthContextType {
   userDetails: any | null;
   subscription: Subscription | null;
   organizations: Organization[];
-  workspace: Workspace | null;
+  workspaces: Workspace[] | null;
   loading: boolean;
   error: Error | null;
   signOut: () => Promise<void>;
@@ -34,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userDetails, setUserDetails] = useState<any | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [workspaces, setWorkspaces] = useState<Workspace[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   
@@ -44,39 +45,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserData = async (): Promise<void> => {
     try {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       setError(null);
 
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { data: { user: newUser }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
       
-      if (!user) {
+      if (!newUser) {
         await signOut();
         return;
       }
 
-      setUser(user);
+      setUser(newUser);
 
       // Load all user-related data in parallel
       const [details, sub, orgs, ws] = await Promise.all([
         getUserDetails(supabase),
         getSubscription(supabase),
         getUserOrganizations(supabase),
-        supabase
-          .from('workspaces')
-          .select('*, organization:organizations(*)')
-          .limit(1)
-          .single()
-          .then(({ data, error }) => {
-            if (error) throw error;
-            return data;
-          }),
+        getUserWorkspaces(supabase),
       ]);
 
       setUserDetails(details);
       setSubscription(sub);
       setOrganizations(orgs);
-      setWorkspace(ws);
+      setWorkspaces(ws);
 
       // Set up real-time subscriptions
       const orgSubscription = supabase
@@ -115,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserDetails(null);
       setSubscription(null);
       setOrganizations([]);
-      setWorkspace(null);
+      setWorkspaces(null);
       router.push('/signin');
     } catch (error) {
       console.error('Error signing out:', error);
@@ -145,7 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userDetails,
     subscription,
     organizations,
-    workspace,
+    workspaces,
     loading,
     error,
     signOut,
