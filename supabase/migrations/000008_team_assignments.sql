@@ -1,3 +1,28 @@
+ -- Team assignments table
+CREATE TABLE team_assignments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    assignable_type TEXT NOT NULL,
+    assignable_id UUID NOT NULL,
+    role team_role NOT NULL DEFAULT 'member',
+    valid_period TSTZRANGE DEFAULT tstzrange(now(), NULL) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    assigned_by UUID REFERENCES auth.users(id),
+    assignment_notes TEXT,
+    notifications_settings JSONB DEFAULT '{}',
+    CONSTRAINT valid_assignable_type CHECK (
+        assignable_type IN (
+            'organization',
+            'workspace',
+            'goal',
+            'task',
+            'milestone',
+            'resource'
+        )
+    )
+);
+
 -- Create materialized view for effective access
 CREATE MATERIALIZED VIEW auth.effective_access AS
 WITH RECURSIVE hierarchy AS (
@@ -32,7 +57,7 @@ WITH RECURSIVE hierarchy AS (
     LEFT JOIN workspaces w ON 
         h.assignable_type = 'organization' AND w.organization_id = h.assignable_id
     WHERE COALESCE(g.id, w.id) IS NOT NULL
-        AND NOT (COALESCE(g.id::text, w.id::text) = ANY(h.path)) -- Prevent cycles
+        AND NOT (COALESCE(g.id::text, w.id::text) = ANY(h.path))
 )
 SELECT DISTINCT ON (user_id, assignable_type, assignable_id)
     user_id,
@@ -43,17 +68,7 @@ SELECT DISTINCT ON (user_id, assignable_type, assignable_id)
 FROM hierarchy
 ORDER BY user_id, assignable_type, assignable_id, level;
 
--- Create indexes on materialized view
-CREATE UNIQUE INDEX idx_effective_access_lookup 
-ON auth.effective_access(user_id, assignable_type, assignable_id);
-
-CREATE INDEX idx_effective_access_user 
-ON auth.effective_access(user_id);
-
-CREATE INDEX idx_effective_access_role 
-ON auth.effective_access(role);
-
--- Function to check access
+-- Function to check team access
 CREATE OR REPLACE FUNCTION auth.has_team_access(
     target_type TEXT,
     target_id UUID,
@@ -72,29 +87,40 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Function to refresh materialized view
-CREATE OR REPLACE FUNCTION auth.refresh_effective_access()
-RETURNS TRIGGER AS $$
-BEGIN
-    REFRESH MATERIALIZED VIEW CONCURRENTLY auth.effective_access;
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- Indexes
+CREATE INDEX idx_team_assignments_user ON team_assignments(user_id);
+CREATE INDEX idx_team_assignments_assignable ON team_assignments(assignable_type, assignable_id);
+CREATE INDEX idx_team_assignments_role ON team_assignments(role);
+CREATE INDEX idx_team_assignments_period ON team_assignments USING gist (valid_period);
+CREATE INDEX idx_team_assignments_active ON team_assignments(user_id, assignable_type, assignable_id) 
+    WHERE upper(valid_period) IS NULL OR upper(valid_period) > NOW();
+CREATE INDEX idx_team_assignments_lookup 
+    ON team_assignments(user_id, assignable_type, assignable_id);
 
--- Auto-refresh trigger
+-- Create indexes on materialized view
+CREATE UNIQUE INDEX idx_effective_access_lookup 
+    ON auth.effective_access(user_id, assignable_type, assignable_id);
+CREATE INDEX idx_effective_access_user 
+    ON auth.effective_access(user_id);
+CREATE INDEX idx_effective_access_role 
+    ON auth.effective_access(role);
+
+-- Triggers
+CREATE TRIGGER handle_updated_at
+    BEFORE UPDATE ON team_assignments
+    FOR EACH ROW
+    EXECUTE PROCEDURE moddatetime(updated_at);
+
+-- Auto-refresh trigger for materialized view
 CREATE TRIGGER refresh_effective_access
     AFTER INSERT OR UPDATE OR DELETE ON team_assignments
     FOR EACH STATEMENT
     EXECUTE FUNCTION auth.refresh_effective_access();
 
--- Add audit logging for team assignments
-CREATE TRIGGER log_team_assignment_changes
-    AFTER INSERT OR UPDATE OR DELETE ON team_assignments
-    FOR EACH ROW
-    EXECUTE FUNCTION audit.log_action();
+-- RLS Policies
+ALTER TABLE team_assignments ENABLE ROW LEVEL SECURITY;
 
--- Enhanced team assignment policies using materialized view
-DROP POLICY IF EXISTS "Team assignment visibility" ON team_assignments;
+-- Team Assignment Policies
 CREATE POLICY "Team assignment visibility"
     ON team_assignments FOR SELECT
     USING (
@@ -107,7 +133,6 @@ CREATE POLICY "Team assignment visibility"
         )
     );
 
-DROP POLICY IF EXISTS "Team assignment management" ON team_assignments;
 CREATE POLICY "Team assignment management"
     ON team_assignments FOR ALL
     USING (
@@ -118,50 +143,3 @@ CREATE POLICY "Team assignment management"
             AND ea.role IN ('owner', 'admin')
         )
     );
-
--- Function to get all user permissions
-CREATE OR REPLACE FUNCTION auth.get_user_permissions(user_uuid UUID)
-RETURNS TABLE (
-    assignable_type TEXT,
-    assignable_id UUID,
-    role TEXT,
-    inherited_from JSONB
-) AS $$
-BEGIN
-    RETURN QUERY
-    WITH RECURSIVE inheritance AS (
-        SELECT 
-            ea.assignable_type,
-            ea.assignable_id,
-            ea.role,
-            ea.level,
-            jsonb_build_object(
-                'type', ea.assignable_type,
-                'id', ea.assignable_id,
-                'role', ea.role
-            ) as source
-        FROM auth.effective_access ea
-        WHERE ea.user_id = user_uuid
-    )
-    SELECT 
-        i.assignable_type,
-        i.assignable_id,
-        i.role,
-        CASE 
-            WHEN i.level > 1 THEN 
-                jsonb_build_array(i.source)
-            ELSE NULL
-        END as inherited_from
-    FROM inheritance i;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Add comment
-COMMENT ON MATERIALIZED VIEW auth.effective_access IS 
-'Stores computed team access permissions including inherited access through organization/workspace hierarchy';
-
-COMMENT ON FUNCTION auth.has_team_access IS 
-'Checks if the current user has specific access to a target resource';
-
-COMMENT ON FUNCTION auth.get_user_permissions IS 
-'Returns all permissions for a user including inheritance information';
