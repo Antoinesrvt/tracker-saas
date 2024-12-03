@@ -1,124 +1,90 @@
- import { BaseService } from './base.service';
- import { createClient } from '@/lib/supabase/client';
- import type { ServiceResponse } from '@/types/service.types';
+import { BaseService } from './base.service';
+import { createClient } from '@/lib/supabase/client';
+import type { ServiceResponse } from '@/types/service.types';
+import type { LinkableObject } from '@/types/linkable-objects';
 
- export interface Resource {
-   id: string;
-   title: string;
-   type: 'file' | 'link' | 'document' | 'image' | 'video';
-   target_type: 'goal' | 'milestone' | 'task' | 'workspace';
-   target_id: string;
-   link: string;
-   encryption_key?: string;
-   size?: number;
-   mime_type?: string;
-   preview_url?: string;
-   version: number;
-   tags: string[];
-   shared_with: Record<string, any>;
-   visibility: 'public' | 'private' | 'team' | 'organization';
-   metadata: Record<string, any>;
-   creator_id: string;
-   organization_id: string;
-   created_at: string;
-   updated_at: string;
- }
+// Define Resource specific interface
+export interface Resource extends LinkableObject {
+  type: 'resource';
+  title: string;
+  description?: string;
+  file_type: 'file' | 'link' | 'document';
+  url: string;
+  size?: number;
+  metadata: Record<string, any>;
+  visibility: 'public' | 'team' | 'private';
+  tags?: string[];
+}
 
- export class ResourceService extends BaseService {
-   async getResource(id: string): Promise<ServiceResponse<Resource>> {
-     try {
-       const supabase = createClient();
-       const { data, error } = await supabase
-         .from('resources')
-         .select('*')
-         .eq('id', id)
-         .single();
+export class ResourceService extends BaseService {
+  // Existing methods remain the same
+  async getResource(id: string): Promise<ServiceResponse<Resource>> {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('resources')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-       if (error) throw error;
-       return { data, error: null };
-     } catch (error) {
-       return { data: null, error: error as Error };
-     }
-   }
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      return { data: null, error: error as Error };
+    }
+  }
 
-   async getTargetResources(
-     targetType: string,
-     targetId: string
-   ): Promise<ServiceResponse<Resource[]>> {
-     try {
-       await this.checkAccess(targetType, targetId);
+  // Enhanced method using base service
+  async getTargetResources(
+    targetType: TargetType,
+    targetId: string
+  ): Promise<ServiceResponse<Resource[]>> {
+    return this.getLinkedObjects<Resource>(targetType, targetId, 'resource');
+  }
 
-       const supabase = createClient();
-       const { data, error } = await supabase
-         .from('resources')
-         .select('*')
-         .eq('target_type', targetType)
-         .eq('target_id', targetId)
-         .order('created_at', { ascending: false });
+  // Enhanced upload method
+  async uploadResource(
+    file: File,
+    metadata: {
+      targetType: TargetType;
+      targetId: string;
+      title: string;
+      visibility?: Resource['visibility'];
+      tags?: string[];
+    }
+  ): Promise<ServiceResponse<Resource>> {
+    try {
+      const supabase = createClient();
+      
+      // Upload file to storage
+      const { data: fileData, error: uploadError } = await supabase.storage
+        .from('resources')
+        .upload(`${metadata.targetId}/${file.name}`, file);
 
-       if (error) throw error;
-       return { data, error: null };
-     } catch (error) {
-       return { data: null, error: error as Error };
-     }
-   }
+      if (uploadError) throw uploadError;
 
-   async uploadResource(
-     file: File,
-     metadata: {
-       title: string;
-       target_type: string;
-       target_id: string;
-       organization_id: string;
-       tags?: string[];
-       visibility?: Resource['visibility'];
-     }
-   ): Promise<ServiceResponse<Resource>> {
-     try {
-       await this.checkAccess(metadata.target_type, metadata.target_id);
+      // Create resource record using base service
+      const resource: Partial<Resource> = {
+        type: 'resource',
+        title: metadata.title,
+        file_type: 'file',
+        url: fileData.path,
+        size: file.size,
+        visibility: metadata.visibility || 'team',
+        tags: metadata.tags,
+        metadata: {
+          originalName: file.name,
+          mimeType: file.type
+        }
+      };
 
-       const supabase = createClient();
+      return this.linkObject(resource as Resource, metadata.targetType, metadata.targetId);
+    } catch (error) {
+      return { data: null, error: error as Error };
+    }
+  }
 
-       // Upload file to storage
-       const { data: uploadData, error: uploadError } = await supabase.storage
-         .from('resources')
-         .upload(`${metadata.organization_id}/${crypto.randomUUID()}`, file);
-
-       if (uploadError) throw uploadError;
-
-       // Create resource record
-       const { data: resource, error: resourceError } = await supabase
-         .from('resources')
-         .insert([
-           {
-             title: metadata.title,
-             type: getResourceType(file.type),
-             target_type: metadata.target_type,
-             target_id: metadata.target_id,
-             link: uploadData.path,
-             size: file.size,
-             mime_type: file.type,
-             tags: metadata.tags || [],
-             visibility: metadata.visibility || 'team',
-             creator_id: this.context.userId,
-             organization_id: metadata.organization_id,
-             metadata: {
-               original_name: file.name,
-               last_modified: file.lastModified
-             }
-           }
-         ])
-         .select()
-         .single();
-
-       if (resourceError) throw resourceError;
-       return { data: resource, error: null };
-     } catch (error) {
-       return { data: null, error: error as Error };
-     }
-   }
-
-   async deleteResource(id: string): Promise<ServiceResponse<boolean>> {
+    async deleteResource(id: string): Promise<ServiceResponse<boolean>> {
      try {
        const supabase = createClient();
 
@@ -199,7 +165,7 @@
    }
  }
 
- function getResourceType(mimeType: string): Resource['type'] {
+ export function getResourceType(mimeType: string): Resource['type'] {
    if (mimeType.startsWith('image/')) return 'image';
    if (mimeType.startsWith('video/')) return 'video';
    if (mimeType.startsWith('application/pdf')) return 'document';

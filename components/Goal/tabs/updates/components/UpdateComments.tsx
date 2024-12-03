@@ -1,7 +1,7 @@
 import { Comment } from '@/types/updates';
 import { useFormattedDate } from '@/hooks/use-formatted-date';
-import { Button } from '@/components/ui/Button/index';
-import { Input } from '@/components/ui/Input/index';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 
 interface UpdateCommentsProps {
@@ -46,13 +46,13 @@ export const UpdateComments = ({ comments, onAddComment }: UpdateCommentsProps) 
 };
 
 const CommentItem = ({ comment }: { comment: Comment }) => {
-  const formattedDate = useFormattedDate(comment.createdAt);
+  const formattedDate = useFormattedDate(comment.created_at);
 
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-2">
         <img
-          src={comment.author.avatar}
+          src={comment.author.avatar_url}
           alt={comment.author.name}
           className="w-6 h-6 rounded-full"
         />

@@ -43,6 +43,9 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useGoalContext } from "@/contexts/GoalContext";
+import { useUpdates } from "@/hooks/use-updates";
+import { useUser } from "@/hooks/useUser";
+import { ObjectType, UpdateType } from "@/types/updates";
 
 
 export type SelectedObject = {
@@ -77,82 +80,93 @@ interface UpdatesTabProps {
 
 const NewUpdates: React.FC<UpdatesTabProps> = ({
   selectedObject,
-  onAddReaction,
   styles,
 }) => {
+  const { updates, isLoading, addUpdate, addComment, addReaction } = useUpdates(selectedObject?.id);
   const { goal } = useGoalContext();
-  const [newUpdateContent, setNewUpdateContent] = useState("");
+  const { user } = useUser();
+  const [newUpdateContent, setNewUpdateContent] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState<'all' | ObjectType>(
+    'all'
+  );
+  const [isNewUpdateOpen, setIsNewUpdateOpen] = useState(false);
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   const [editingUpdate, setEditingUpdate] = useState<Update | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [mentionQuery, setMentionQuery] = useState("");
+  const [mentionQuery, setMentionQuery] = useState('');
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
   const [mounted, setMounted] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [selectedFilter, setSelectedFilter] = useState<'all' | UpdateObjectType>('all');
-  const [isNewUpdateOpen, setIsNewUpdateOpen] = useState(false);
-  const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const handleSubmitUpdate = (content: string) => {
+    if (!user || !goal) return;
+    
+    // addUpdate({
+    //   type: 'comment',
+    //   object_type: selectedObject?.type || 'goal',
+    //   object_id: selectedObject?.id || goal.id,
+    //   content,
+    //   creator_id: user.id,
+    //   metadata: {
+    //     object_name: selectedObject?.title || goal.title
+    //   }
+    // });
+    setNewUpdateContent('');
+    setIsNewUpdateOpen(false);
+  };
 
-  if (!goalDetails?.updates || !goalDetails.team) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>
-          Les mises à jour ne sont pas disponibles pour le moment.
-        </AlertDescription>
-      </Alert>
-    );
-  }
+  const handleAddComment = (updateId: string, content: string) => {
+    if (!user) return;
+    
+    addComment({
+      updateId,
+      comment: {
+        content,
+        author_id: user.id,
+        mentions: [],
+        reactions: []
+      }
+    });
+  };
+
+  const handleAddReaction = (updateId: string, emoji: string) => {
+    addReaction({ updateId, emoji });
+  };
 
   // Updated filteredUpdates logic
   const filteredUpdates = useMemo(() => {
-    let updates = goalDetails.updates;
+    if (!updates) return [];
+
+    let newUpdates = updates;
 
     if (selectedObject) {
-      updates = updates.filter((update) => {
-        if (update.type === "event") return false;
+      newUpdates = updates.filter((update) => {
         return (
-          update.type === selectedObject.type &&
-          update.objectId === selectedObject.id
+          update.object_type === selectedObject.type &&
+          update.object_id === selectedObject.id
         );
       });
     } else if (selectedFilter !== 'all') {
-      updates = updates.filter(update => update.type === selectedFilter);
+      newUpdates = updates.filter((update) => update.type === selectedFilter);
     }
 
-    return updates.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    return newUpdates.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-  }, [goalDetails.updates, selectedObject, selectedFilter]);
+  }, [updates, selectedObject, selectedFilter]);
 
   // Add updateStats calculation
   const updateStats = useMemo(() => ({
-    all: goalDetails.updates.length,
-    task: goalDetails.updates.filter(u => u.type === 'task').length,
-    milestone: goalDetails.updates.filter(u => u.type === 'milestone').length,
-    resource: goalDetails.updates.filter(u => u.type === 'resource').length,
-    event: goalDetails.updates.filter(u => u.type === 'event').length,
-  }), [goalDetails.updates]);
+    all: updates?.length,
+    task: updates?.filter(u => u.object_type === 'task').length,
+    milestone: updates?.filter(u => u.object_type === 'milestone').length,
+    resource: updates?.filter(u => u.object_type === 'resource').length,
+    goal: updates?.filter(u => u.object_type === 'goal').length,
+  }), [updates]);
 
-  const handleSubmitUpdate = () => {
-    if (!newUpdateContent.trim()) return;
 
-    const newUpdate = {
-      content: newUpdateContent,
-      type: selectedObject?.type || 'comment',
-      objectId: selectedObject?.id,
-      objectTitle: selectedObject?.title,
-      reactions: [],
-      comments: [],
-    };
-
-    // onAddUpdate?.(newUpdate);
-    setNewUpdateContent("");
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+    const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "@") {
       setShowMentionSuggestions(true);
       setMentionQuery("");
@@ -172,7 +186,7 @@ const NewUpdates: React.FC<UpdatesTabProps> = ({
     setShowMentionSuggestions(false);
   };
 
-  const filteredTeamMembers = goalDetails.team.filter((member) =>
+  const filteredTeamMembers = goal?.team.filter((member) =>
     member.name.toLowerCase().includes(mentionQuery.toLowerCase())
   );
 
@@ -279,11 +293,11 @@ const NewUpdates: React.FC<UpdatesTabProps> = ({
             {/* Réactions */}
             {update.reactions && update.reactions.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3">
-                {update.reactions.map((reaction, index) => (
+                {update.reactions.map((reaction, index: number) => (
                   <button
                     key={index}
                     className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 hover:bg-white/10"
-                    onClick={() => onAddReaction?.(update.id, reaction.emoji)}
+                    onClick={() => addReaction(update.id, reaction.emoji)}
                   >
                     <span>{reaction.emoji}</span>
                     <span className="text-sm text-white/60">

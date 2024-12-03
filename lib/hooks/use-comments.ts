@@ -1,13 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CommentService, type Comment } from '@/lib/services/comment.service';
+import { CommentService } from '@/lib/services/comment.service';
 import { useAuth } from '@/lib/providers/auth-provider';
-import { useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import type { Comment } from '@/types/linkable-objects';
+import type { TargetType } from '@/types/linkable-objects';
 
 export function useComments(params: {
-  objectType?: string;
-  objectId?: string;
-  updateId?: string;
+  targetType: TargetType;
+  targetId: string;
   parentId?: string;
 }) {
   const { user, teamAccess } = useAuth();
@@ -15,40 +14,10 @@ export function useComments(params: {
   const service = new CommentService({ userId: user.id, teamAccess });
   const queryClient = useQueryClient();
 
-  // Set up real-time subscription
-  useEffect(() => {
-    const supabase = createClient();
-    const subscription = supabase
-      .channel('comments')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'comments',
-          filter: params.objectId
-            ? `object_id=eq.${params.objectId}`
-            : params.updateId
-              ? `update_id=eq.${params.updateId}`
-              : undefined
-        },
-        () => {
-          queryClient.invalidateQueries({
-            queryKey: ['comments', params]
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [params, queryClient]);
-
   return useQuery({
     queryKey: ['comments', params],
     queryFn: () => service.getComments(params),
-    enabled: !!(params.objectId || params.updateId)
+    enabled: !!(params.targetId && params.targetType)
   });
 }
 
@@ -59,24 +28,19 @@ export function useCreateComment() {
   const service = new CommentService({ userId: user.id, teamAccess });
 
   return useMutation({
-    mutationFn: (comment: Partial<Comment>) => service.createComment(comment),
+    mutationFn: ({
+      comment,
+      targetType,
+      targetId
+    }: {
+      comment: Omit<Comment, 'id' | 'created_at' | 'updated_at' | 'created_by'>;
+      targetType: TargetType;
+      targetId: string;
+    }) => service.createComment(comment, targetType, targetId),
     onSuccess: (_, variables) => {
-      // Invalidate relevant queries
-      if (variables.object_id) {
-        queryClient.invalidateQueries({
-          queryKey: ['comments', { objectId: variables.object_id }]
-        });
-      }
-      if (variables.update_id) {
-        queryClient.invalidateQueries({
-          queryKey: ['comments', { updateId: variables.update_id }]
-        });
-      }
-      if (variables.parent_id) {
-        queryClient.invalidateQueries({
-          queryKey: ['comments', { parentId: variables.parent_id }]
-        });
-      }
+      queryClient.invalidateQueries({
+        queryKey: ['comments', { targetType: variables.targetType, targetId: variables.targetId }]
+      });
     }
   });
 }
