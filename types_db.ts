@@ -212,7 +212,7 @@ export type Database = {
       }
       goals: {
         Row: {
-          config_id: string
+          config_id: string | null
           connections: Json
           created_at: string
           description: string | null
@@ -231,7 +231,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
-          config_id: string
+          config_id?: string | null
           connections?: Json
           created_at?: string
           description?: string | null
@@ -250,7 +250,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
-          config_id?: string
+          config_id?: string | null
           connections?: Json
           created_at?: string
           description?: string | null
@@ -888,30 +888,45 @@ export type Database = {
       }
       updates: {
         Row: {
+          id: string
+          content: string | null
           created_at: string
           creator_id: string
-          id: string
+          object_id: string | null
+          object_type: string | null
           mentions: string[] | null
+          metadata: Json | null
           payload: Json
           target_id: string
+          title: string | null
           type: Database["public"]["Enums"]["update_type"]
         }
         Insert: {
+          content?: string | null
           created_at?: string
           creator_id: string
           id?: string
           mentions?: string[] | null
+          metadata?: Json | null
+          object_id?: string | null
+          object_type?: string | null
           payload?: Json
           target_id: string
+          title?: string | null
           type: Database["public"]["Enums"]["update_type"]
         }
         Update: {
+          content?: string | null
           created_at?: string
           creator_id?: string
           id?: string
           mentions?: string[] | null
+          metadata?: Json | null
+          object_id?: string | null
+          object_type?: string | null
           payload?: Json
           target_id?: string
+          title?: string | null
           type?: Database["public"]["Enums"]["update_type"]
         }
         Relationships: []
@@ -1070,7 +1085,6 @@ export type Database = {
         | "comment"
         | "status_change"
         | "progress_update"
-        | "milestone"
         | "assignment"
     }
     CompositeTypes: {

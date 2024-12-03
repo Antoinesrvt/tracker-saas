@@ -7,6 +7,10 @@ interface StatisticsSectionProps {
 }
 
 export const StatisticsSection = ({ goalDetails }: StatisticsSectionProps) => {
+
+
+  // Get calculus on a context with tasks and milestones data
+
   const completedTasks = goalDetails.tasks.filter(t => t.status === 'completed').length;
   const completedMilestones = goalDetails.milestones.filter(m => m.completed).length;
   const overdueTasks = goalDetails.tasks.filter(t => 

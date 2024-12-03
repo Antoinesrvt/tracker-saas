@@ -10,7 +10,7 @@ export const UpdateReactions = ({ reactions, onAddReaction }: UpdateReactionsPro
 
   return (
     <div className="flex flex-wrap gap-2 mt-3">
-      {reactions.map((reaction, index) => (
+      {reactions.map((reaction, index: number) => (
         <button
           key={index}
           className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 hover:bg-white/10"

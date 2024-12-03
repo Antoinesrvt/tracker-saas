@@ -1,4 +1,4 @@
-import { Database } from '@/types/supabase'
+import { Database } from 'types_db'
 
 // Export convenience types
 export type Tables<T extends keyof Database['public']['Tables']> = 

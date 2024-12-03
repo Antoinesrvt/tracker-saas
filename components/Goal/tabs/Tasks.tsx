@@ -2,20 +2,18 @@
 
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/Card/index";
-import { Progress } from "@/components/ui copy/progress";
 import { Plus, Filter, Columns, Calendar as CalendarIcon } from "lucide-react";
-import { Button } from "@/components/ui/Button/index";
+import { Button } from "@/components/ui/button";
 import { TaskFilters, TasksTabProps } from "./tasks/types";
 import { TaskDialog } from "./tasks/components/TaskDialogs";
 import { FiltersDialog } from "./tasks/components/FiltersDialog";
 import { Kanban } from "./tasks/components/Kanban";
 import { CalendarView } from "./tasks/components/Calendar";
 import { useTaskFilters, useTaskCalculations } from "@/hooks/use-task-filters";
-import { TaskTemplate } from "@/types/tasks";
+import { TaskTemplate } from "@/utils/supabase/queries/tasks";
+import { useGoalContext } from "@/contexts/GoalContext";
 
 export default function Tasks({
-  goalDetails,
   styles,
   onUpdateTask,
   onCreateTask,
@@ -28,6 +26,8 @@ export default function Tasks({
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null);
 
+  const { tasks } = useGoalContext();
+
   // Filters state
   const [filters, setFilters] = useState<TaskFilters>({
     assignee: "",
@@ -38,7 +38,7 @@ export default function Tasks({
   });
 
   // Use custom hooks for task filtering and calculations
-  const filteredTasks = useTaskFilters(goalDetails.tasks, filters as TaskFilters);
+  const filteredTasks = useTaskFilters(tasks, filters as TaskFilters);
   const {
     tasksByStatus,
     progress,
@@ -48,9 +48,10 @@ export default function Tasks({
   } = useTaskCalculations(filteredTasks);
 
   // Get the task being edited
-  const taskBeingEdited = useMemo(() => 
-    editingTask ? goalDetails.tasks.find(t => t.id === editingTask) ?? null : null,
-    [editingTask, goalDetails.tasks]
+  const taskBeingEdited = useMemo(
+    () =>
+      editingTask ? tasks.find((t) => t.id === editingTask) ?? null : null,
+    [editingTask, tasks]
   );
 
   return (

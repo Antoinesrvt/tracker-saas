@@ -197,6 +197,16 @@ export const createWorkspaceWithOrg = async (
 
 
 export const createGoal = async (supabase: SupabaseClient, goal: Database['public']['Tables']['goals']['Insert']) => {
-  const { data: newGoal, error } = await supabase.from('goals').insert(goal).select().single();
-  return newGoal;
+  try {
+    const { data: newGoal, error } = await supabase.from('goals').insert(goal).select().single();
+
+    if (error) {
+      throw new Error(`Failed to create goal: ${error.message}`);
+    }
+
+    return newGoal;
+  } catch (err) {
+    console.error('Error creating goal:', err);
+    throw new Error('An error occurred while creating the goal. Please try again later.');
+  }
 };

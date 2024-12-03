@@ -42,6 +42,7 @@ import EmojiPicker from 'emoji-picker-react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useGoalContext } from "@/contexts/GoalContext";
 
 
 export type SelectedObject = {
@@ -75,13 +76,11 @@ interface UpdatesTabProps {
 }
 
 const NewUpdates: React.FC<UpdatesTabProps> = ({
-  goalDetails,
   selectedObject,
-  onAddUpdate,
   onAddReaction,
-  onRemoveReaction,
   styles,
 }) => {
+  const { goal } = useGoalContext();
   const [newUpdateContent, setNewUpdateContent] = useState("");
   const [editingUpdate, setEditingUpdate] = useState<Update | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);

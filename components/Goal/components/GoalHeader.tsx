@@ -1,16 +1,15 @@
  import { Clock, XCircle } from "lucide-react";
- import { Goal, GoalDetails, TypeStyles } from "@/types/goals";
+ import { Goal, GoalDetails } from "@/types/goals";
+ import { TypeStyles } from '@/types/style';
 
  interface GoalHeaderProps {
    goal: Goal;
-   goalDetails: GoalDetails;
    styles: TypeStyles;
    onClose: () => void;
  }
 
  export const GoalHeader = ({
    goal,
-   goalDetails,
    styles,
    onClose,
  }: GoalHeaderProps) => {
@@ -26,7 +25,7 @@
              </div>
              <div className="flex items-center gap-2 text-white/60">
                <Clock className="h-4 w-4" />
-               <span>Échéance: {goalDetails?.deadline}</span>
+               <span>Échéance: {goal.end_date}</span>
              </div>
            </div>
            <h2 className={`text-2xl font-bold ${styles.text} mb-1`}>

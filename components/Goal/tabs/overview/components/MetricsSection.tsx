@@ -12,6 +12,8 @@ export const MetricsSection = ({ metrics }: MetricsSectionProps) => {
   const timeProgress = (metrics.time.timeSpent / metrics.time.estimated) * 100;
   const budgetProgress = (metrics.budget.spent / metrics.budget.allocated) * 100;
 
+  // Same calculous context
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">

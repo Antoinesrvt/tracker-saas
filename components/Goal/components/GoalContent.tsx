@@ -6,22 +6,25 @@
  import Timeline from "../tabs/Timeline";
  import Metrics from "../tabs/Metrics";
  import Resources from "../tabs/Resources";
+import { Database } from "@/types_db";
+import { useGoalContext } from "@/contexts/GoalContext";
+
+ export type Goal = Database['public']['Tables']['goals']['Row'];
 
  interface GoalContentProps {
    activeTab: TabType;
-   goalDetails: GoalDetails;
    styles: TypeStyles;
  }
 
  export const GoalContent = ({
    activeTab,
-   goalDetails,
    styles,
  }: GoalContentProps) => {
+   const { goal } = useGoalContext();
    const renderContent = () => {
      switch (activeTab) {
        case "overview":
-         return <Overview goalDetails={goalDetails} styles={styles} />;
+         return <Overview styles={styles} />;
        case "updates":
          return <Updates goalDetails={goalDetails} styles={styles} />;
        case "tasks":
@@ -29,7 +32,7 @@
        case "timeline":
          return (
            <Timeline
-             goalDetails={goalDetails}
+             goalDetails={goal}
              onFilterTasks={() => {}}
              styles={styles}
            />

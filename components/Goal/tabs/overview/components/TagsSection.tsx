@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Input } from '@/components/ui/Input/index';
+import { Input } from '@/components/ui/input';
 import { TagsSectionProps } from '../types';
 
 export const TagsSection = ({ tags, styles, onTagAdd, onTagRemove }: TagsSectionProps) => {
@@ -8,7 +8,7 @@ export const TagsSection = ({ tags, styles, onTagAdd, onTagRemove }: TagsSection
 
   return (
     <div className="flex flex-wrap gap-2 mb-6">
-      {tags?.map((tag) => (
+      {tags?.map((tag: any) => (
         <span
           key={tag.id}
           className={`px-3 py-1 rounded-full text-sm cursor-pointer
@@ -26,8 +26,8 @@ export const TagsSection = ({ tags, styles, onTagAdd, onTagRemove }: TagsSection
       {showTagInput ? (
         <Input
           value={newTag}
-          onChange={(e) => setNewTag(e.target.value)}
-          onKeyDown={(e) => {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTag(e.target.value)}
+          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === 'Enter' && newTag.trim()) {
               onTagAdd?.(newTag.trim());
               setNewTag('');

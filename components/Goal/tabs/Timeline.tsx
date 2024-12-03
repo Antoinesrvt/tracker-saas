@@ -11,9 +11,9 @@ import { MilestoneCard } from "./timeline/components/MilestoneCard";
 import { AddMilestoneForm } from "./timeline/components/AddMilestoneForm";
 import { EditMilestoneForm } from "./timeline/components/EditMilestoneForm";
 import { useTimelineCalculations } from "@/hooks/use-timeline-calculations";
+import { useGoalContext } from "@/contexts/GoalContext";
 
 export default function Timeline({
-  goalDetails,
   styles,
   onFilterTasks,
   onAddMilestone,
@@ -24,12 +24,14 @@ export default function Timeline({
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<string | null>(null);
 
+  const { milestones } = useGoalContext();
+
   const {
     sortedMilestones,
     progress,
     hasOverdueMilestones,
     hasTodayMilestones,
-  } = useTimelineCalculations(goalDetails.milestones);
+  } = useTimelineCalculations(milestones);
 
   return (
     <div className="space-y-8">
@@ -121,7 +123,7 @@ export default function Timeline({
           {editingMilestone && (
             <EditMilestoneForm
               milestone={
-                goalDetails.milestones.find((m) => m.id === editingMilestone)!
+                milestones.find((m) => m.id === editingMilestone)!
               }
               onSubmit={(milestone) => {
                 onUpdateMilestone?.(milestone);

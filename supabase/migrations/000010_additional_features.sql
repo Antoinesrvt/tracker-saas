@@ -1,13 +1,17 @@
--- Goal connections for visualization
+-- Create enum for connection strength and status if not exists
+CREATE TYPE connection_strength AS ENUM ('strong', 'weak', 'medium');
+CREATE TYPE connection_status AS ENUM ('active', 'blocked', 'completed');
+
+-- Create goal connections table
 CREATE TABLE goal_connections (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     source_goal_id UUID NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
     target_goal_id UUID NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
-    type goal_type NOT NULL,
-    strength TEXT CHECK (strength IN ('strong', 'weak', 'medium')),
+    strength connection_strength DEFAULT 'medium',
     description TEXT,
-    status TEXT CHECK (status IN ('active', 'blocked', 'completed')),
+    status connection_status DEFAULT 'active',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT different_goals CHECK (source_goal_id != target_goal_id)
 );
 

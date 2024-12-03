@@ -7,7 +7,7 @@ import { GoalProvider, useGoalContext } from "@/contexts/GoalContext";
 import { GoalHeader } from "./components/GoalHeader";
 import { GoalNavigation, TabType } from "./components/GoalNavigation";
 import { GoalContent } from "./components/GoalContent";
-import { typeStyles } from "@/types/style";
+import { TypeStyles, typeStyles } from "@/types/style";
 import { Loader2, AlertCircle } from "lucide-react";
 
 const LoadingState = () => (
@@ -33,7 +33,7 @@ const GoalDetailCard = () => {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
 
   // Default to a loading style if no goal is available yet
-  const styles = goal ? typeStyles[goal.type] : typeStyles.default;
+  const styles = goal ? typeStyles[goal.type] : typeStyles.fondation;
   const goalDetails = { milestones, tasks, teams };
 
   const renderContent = () => {
@@ -43,12 +43,11 @@ const GoalDetailCard = () => {
 
     return (
       <>
-        {/* <GoalHeader
+        <GoalHeader
           goal={goal}
-          goalDetails={goalDetails}
           styles={styles}
           onClose={closeModal}
-        /> */}
+        />
         <GoalNavigation
           activeTab={activeTab}
           onTabChange={(tab) => setActiveTab(tab as TabType)}
@@ -56,7 +55,6 @@ const GoalDetailCard = () => {
         />
         {/* <GoalContent
           activeTab={activeTab}
-          goalDetails={goalDetails}
           styles={styles}
         /> */}
       </>

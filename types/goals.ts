@@ -1,4 +1,4 @@
-import type { Database } from '@/types/supabase';
+import type { Database } from 'types_db';
 
 export type Goal = Database['public']['Tables']['goals']['Row'];
 export type GoalConnection =

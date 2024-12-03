@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, ZoomIn, ZoomOut, Home, Settings } from 'lucide-react';
+import { Plus, ZoomIn, ZoomOut, Home, Settings, Target, Flag, CheckSquare, FileText, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GoalCard } from '../components/GoalCard';
 import {
@@ -19,9 +19,11 @@ import { getUserDetails } from '@/utils/supabase/queries';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useItemContext } from '@/contexts/ItemContext';
+import { AnimatePresence } from 'framer-motion';
 
 type Goal = Database['public']['Tables']['goals']['Row'];
 type User = Database['public']['Tables']['users']['Row'];
+type GoalType = Database['public']['Enums']['goal_type'];
 
 const TYPE_LABELS = {
   fondation: 'Fondations',
@@ -32,9 +34,64 @@ const TYPE_LABELS = {
 
 // Update these constants for better spacing
 const CARD_WIDTH = 264;
-const CARD_HEIGHT = 120; // Increased from 36 to account for actual card height
+const CARD_HEIGHT = 250; // Increased from 36 to account for actual card height
 const HORIZONTAL_GAP = 120; // Increased from 70 for better separation
 const VERTICAL_GAP = 80; // Increased from 50 for better separation
+
+const FloatingActionMenu = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const menuItems = [
+    { icon: Target, label: 'New Goal', color: 'from-blue-500/40 to-blue-600/40 hover:from-blue-500/50 hover:to-blue-600/50' },
+    { icon: Flag, label: 'New Milestone', color: 'from-purple-500/40 to-purple-600/40 hover:from-purple-500/50 hover:to-purple-600/50' },
+    { icon: CheckSquare, label: 'New Task', color: 'from-green-500/40 to-green-600/40 hover:from-green-500/50 hover:to-green-600/50' },
+    { icon: FileText, label: 'New Resource', color: 'from-amber-500/40 to-amber-600/40 hover:from-amber-500/50 hover:to-amber-600/50' }
+  ];
+
+  return (
+    <div className="fixed bottom-4 right-4 z-20">
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="absolute bottom-16 right-0 flex flex-col-reverse gap-2"
+          >
+            {menuItems.map((item, index) => (
+              <motion.button
+                key={item.label}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ delay: index * 0.05 }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white/90 bg-slate-800/50 backdrop-blur-sm 
+                  hover:bg-slate-700/50 bg-gradient-to-r ${item.color} shadow-lg hover:shadow-xl 
+                  transform hover:scale-105 transition-all border border-white/10`}
+                onClick={() => {
+                  setIsOpen(false);
+                  // Add your action handlers here
+                }}
+              >
+                <item.icon className="w-4 h-4" />
+                <span className="text-sm font-medium">{item.label}</span>
+              </motion.button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <motion.button
+        className="p-4 rounded-full bg-gradient-to-r from-indigo-500/40 to-indigo-600/40 hover:from-indigo-500/50 
+          hover:to-indigo-600/50 text-white/90 shadow-lg hover:shadow-xl transform hover:scale-105 
+          transition-all backdrop-blur-sm border border-white/10"
+        onClick={() => setIsOpen(!isOpen)}
+        animate={{ rotate: isOpen ? 45 : 0 }}
+      >
+        <Plus className="w-6 h-6" />
+      </motion.button>
+    </div>
+  );
+};
 
 export default function GoalTracker() {
   const supabase = getSupabaseBrowserClient();
@@ -55,11 +112,12 @@ export default function GoalTracker() {
   const [dragStartTime, setDragStartTime] = useState(0);
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  const { workspace, goals: otherGoals, loading, error, teams } = useWorkspaceContext();
+  const { workspace, goals: goals, loading, error, teams } = useWorkspaceContext();
   const { organizations } = useAuth();
   const { openGoalModal } = useItemContext();
 
-  const goals = mockGoals;
+
+  // const goals = mockGoals;
   // Move the calculations hook before any early returns
   const sectionLabels = types.map((type, index) => ({
     type,
@@ -198,15 +256,11 @@ export default function GoalTracker() {
     openGoalModal(goalId);
   };
 
-  // Group goals by type
-  const groupedGoals = goals.reduce(
-    (acc, goal) => {
-      if (!acc[goal.type]) acc[goal.type] = [];
-      acc[goal.type].push(goal);
-      return acc;
-    },
-    {} as Record<string, Goal[]>
-  );
+  // Ensure we have all types represented even if there are no goals
+  const groupedGoals = types.reduce((acc, type) => {
+    acc[type] = goals.filter(goal => goal.type === type);
+    return acc;
+  }, {} as Record<string, Goal[]>);
 
   return (
     <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -262,7 +316,7 @@ export default function GoalTracker() {
         </Button>
       </div>
 
-      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 flex items-center gap-3">
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-3">
         <h2 className="text-2xl text-white font-bold opacity-70 text-shadow-md">
           {workspace?.name?.toUpperCase()}
         </h2>
@@ -278,14 +332,7 @@ export default function GoalTracker() {
         )}
       </div>
 
-      <div className="fixed bottom-4 right-4 z-20 bg-white/10 rounded-lg p-4 shadow-lg">
-        <h2 className="text-white font-semibold">Team</h2>
-        <div className="flex space-x-2">
-          {/* {users.map((user) => (
-            <img key={user.id} src={user.avatar_url} alt={user.full_name} className="w-8 h-8 rounded-full border-2 border-white" />
-          ))} */}
-        </div>
-      </div>
+      <FloatingActionMenu />
 
       <div
         ref={canvasRef}
@@ -304,33 +351,24 @@ export default function GoalTracker() {
             transition: isDragging ? 'none' : 'transform 0.1s ease-out'
           }}
         >
-          {/* Centering Section Labels
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2">
-            {renderSectionLabels()}
-          </div> */}
-
-            {/* Render goals in a flexbox layout */}
-            <div className="flex justify-between">
-              {Object.entries(groupedGoals).map(([type, goals]) => (
-                <div key={type} className="flex flex-col mb-8 w-1/4">
-                  {renderSectionLabel(type)}
-                  <div className="flex flex-col gap-4">
-                    {/* Add CreateGoalCard for the "fondation" type */}
-                    {goals.map((goal) => (
-                      <GoalCard
-                        key={goal.id}
-                        goal={goal}
-                        styles={typeStyles[goal.type]}
-                        setOpen={setOpen}
-                      />
-                    ))}
-                    {type === 'fondation' && (
-                      <CreateGoalCard workspaceId={workspace?.id || ''} />
-                    )}
-                  </div>
+          <div className="flex justify-between">
+            {types.map((type) => (
+              <div key={type} className="flex flex-col mb-8 w-1/4">
+                {renderSectionLabel(type)}
+                <div className="flex flex-col gap-4">
+                  {groupedGoals[type]?.map((goal) => (
+                    <GoalCard
+                      key={goal.id}
+                      goal={goal}
+                      styles={typeStyles[type]}
+                      setOpen={setOpen}
+                    />
+                  ))}
+                  <CreateGoalCard workspaceId={workspace?.id || ''} type={type as GoalType} />
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

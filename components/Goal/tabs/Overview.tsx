@@ -1,15 +1,24 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/Card/index";
-import { Button } from "@/components/ui/Button/index";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { OverviewTabProps } from "./overview/types";
 import { TeamSection } from "./overview/components/TeamSection";
 import { TagsSection } from "./overview/components/TagsSection";
 import { MetricsSection } from "./overview/components/MetricsSection";
 import { DependenciesSection } from "./overview/components/DependenciesSection";
 import { TasksSection } from "./overview/components/TasksSection";
 import { StatisticsSection } from "./overview/components/StatisticsSection";
+import { useGoalContext } from "@/contexts/GoalContext";
+import { TypeStyles } from "@/types/style";
+
+
+export interface OverviewTabProps {
+  styles: TypeStyles;
+  onExport?: () => void;
+  onTagAdd?: (tag: string) => void;
+  onTagRemove?: (tag: string) => void;
+}
 
 export default function Overview({
   goalDetails,
@@ -18,6 +27,10 @@ export default function Overview({
   onTagAdd,
   onTagRemove,
 }: OverviewTabProps) {
+  const { goal } = useGoalContext();
+
+  if (!goal) return null;
+
   return (
     <div className="grid grid-cols-12 gap-6">
       {/* Description Card - Adjusted to span 7 columns */}
@@ -36,19 +49,17 @@ export default function Overview({
             </Button>
           </div>
 
-          <p className="text-white/80 mb-6">{goalDetails.description}</p>
+          <p className="text-white/80 mb-6">{goal.description}</p>
 
-          <TagsSection
-            tags={goalDetails.tags}
+          {/* <TagsSection
+            tags={goal.tags}
             styles={styles}
             onTagAdd={onTagAdd}
             onTagRemove={onTagRemove}
-          />
+          /> */}
 
           <div className="grid grid-cols-2 gap-6">
             <TeamSection
-              team={goalDetails.team}
-              assignees={goalDetails.assignees}
               onAddMember={() => {}}
             />
 
@@ -58,7 +69,7 @@ export default function Overview({
                 className={`inline-flex items-center gap-2 px-3 py-1 rounded-full
                 ${styles.background} ${styles.text}`}
               >
-                {goalDetails.priority}
+                {goal.priority}
               </div>
             </div>
           </div>
@@ -68,16 +79,13 @@ export default function Overview({
       {/* Metrics Card - Adjusted to span 3 columns */}
       <Card className="col-span-3 bg-white/5 border-white/10">
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">
-            Métriques
-          </h3>
+          <h3 className="text-lg font-semibold text-white mb-4">Métriques</h3>
           <MetricsSection
             metrics={goalDetails.metrics}
             team={goalDetails.team}
           />
         </CardContent>
       </Card>
-
 
       {/* Statistics Card - Spans 2 columns and all rows */}
       <Card className="col-span-2 row-span-3 bg-white/5 border-white/10">
@@ -99,9 +107,7 @@ export default function Overview({
       {/* Dependencies Card - Adjusted to span 5 columns */}
       <Card className="col-span-5 bg-white/5 border-white/10">
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">
-            Dépendances
-          </h3>
+          <h3 className="text-lg font-semibold text-white mb-4">Dépendances</h3>
           <DependenciesSection
             dependencies={goalDetails.dependencies}
             styles={styles}

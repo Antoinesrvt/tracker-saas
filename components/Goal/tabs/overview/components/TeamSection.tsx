@@ -1,12 +1,18 @@
 import { Plus } from 'lucide-react';
 import { TeamSectionProps } from '../types';
+import { useGoalContext } from '@/contexts/GoalContext';
 
 export const TeamSection = ({ team, assignees, onAddMember }: TeamSectionProps) => {
+  // Get team from goal
+  const { teams } = useGoalContext();
+
+  // Get user profile from teams's user_id
+
   return (
     <div>
       <h4 className="text-white/60 mb-2">Équipe</h4>
       <div className="flex -space-x-2">
-        {assignees?.map((user) => (
+        {teams?.map((user) => (
           <img
             key={user.id}
             src={user.avatar}

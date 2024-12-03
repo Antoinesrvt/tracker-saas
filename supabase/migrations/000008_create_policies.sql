@@ -88,16 +88,7 @@ CREATE POLICY "Goal management based on role"
 -- Task Policies
 CREATE POLICY "Task visibility based on goal access"
     ON tasks FOR SELECT
-    USING (
-        goal_id IN (
-            SELECT g.id FROM goals g
-            JOIN team_assignments ta ON 
-                (ta.assignable_type = 'goal' AND ta.assignable_id = g.id)
-                OR
-                (ta.assignable_type = 'workspace' AND ta.assignable_id = g.workspace_id)
-            WHERE ta.user_id = auth.uid()
-        )
-    );
+    USING (auth.has_team_access('goal', goal_id));
 
 CREATE POLICY "Task management based on assignment"
     ON tasks FOR ALL
@@ -272,3 +263,19 @@ CREATE POLICY "KPI visibility based on goal access"
             WHERE ta.user_id = auth.uid()
         )
     ); 
+
+-- -- Only allow super admins to view audit logs
+-- CREATE POLICY "Super admins can view audit logs"
+--     ON audit.logs FOR SELECT
+--     USING (
+--         EXISTS (
+--             SELECT 1 FROM auth.user_private up
+--             WHERE up.id = auth.uid()
+--             AND up.role = 'super_admin'
+--         )
+--     );
+
+-- -- Users can view their own sessions
+-- CREATE POLICY "Users can view own sessions"
+--     ON audit.sessions FOR SELECT
+--     USING (user_id = auth.uid());

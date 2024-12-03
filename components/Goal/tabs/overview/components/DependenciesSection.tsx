@@ -2,6 +2,10 @@ import { LinkIcon } from "lucide-react";
 import { DependenciesSectionProps } from "../types";
 
 export const DependenciesSection = ({ dependencies, styles }: DependenciesSectionProps) => {
+
+
+  // add depencies logiq
+
   return (
     <div className="grid grid-cols-2 gap-6">
       <div>

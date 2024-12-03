@@ -8,6 +8,19 @@
 -- 7. Optimizes team assignment queries
 -- 8. Adds indexes for metrics and monitoring
 
+
+-- User-related indexes
+CREATE INDEX idx_user_profiles_display_name ON public.user_profiles USING gin (display_name gin_trgm_ops);
+CREATE INDEX idx_user_profiles_last_active ON public.user_profiles(last_active);
+CREATE INDEX idx_user_profiles_fts ON public.user_profiles USING gin (
+    to_tsvector('english', coalesce(display_name, '') || ' ' || coalesce(bio, ''))
+);
+
+CREATE INDEX idx_user_private_email ON auth.user_private(email);
+CREATE INDEX idx_user_private_role ON auth.user_private(role);
+CREATE INDEX idx_user_private_jsonb ON auth.user_private USING gin (preferences);
+
+
 -- Core table indexes
 CREATE INDEX idx_organizations_name ON organizations USING gin (name gin_trgm_ops);
 CREATE INDEX idx_organizations_subscription ON organizations(subscription_plan);

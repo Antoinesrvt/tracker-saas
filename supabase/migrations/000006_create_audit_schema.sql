@@ -153,3 +153,12 @@ BEGIN
     RETURN COALESCE(v_count, 0) < p_max_requests;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER; 
+
+
+-- Add additional fields to security_events
+ALTER TABLE audit.security_events
+ADD COLUMN risk_score INTEGER CHECK (risk_score BETWEEN 0 AND 100),
+ADD COLUMN mitigated_at TIMESTAMPTZ,
+ADD COLUMN mitigation_notes TEXT,
+ADD COLUMN related_events UUID[],
+ADD COLUMN tags TEXT[];

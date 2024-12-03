@@ -1,4 +1,4 @@
-import type { Database } from "@/types/supabase";
+import type { Database } from "@/types_db";
 type GoalType = Database['public']['Enums']['goal_type'];
 
 export interface TypeStyles {

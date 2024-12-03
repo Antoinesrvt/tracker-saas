@@ -69,27 +69,22 @@ CREATE TABLE checklist_items (
 );
 
 -- Resources and attachments
+
 CREATE TABLE resources (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     title TEXT NOT NULL,
     type resource_type NOT NULL,
-    location TEXT,
+    target_type TEXT NOT NULL,
+    target_id UUID,
+    link TEXT NOT NULL,
+    encryption_key TEXT,
     metadata JSONB DEFAULT '{}',
-    creator_id UUID NOT NULL REFERENCES auth.users(id),
+    creator_id UUID NOT NULL REFERENCES public.users(id),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    is_active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT valid_target_type CHECK (target_type IN ('goal', 'milestone', 'task', 'workspace')),
     CONSTRAINT valid_title CHECK (char_length(title) >= 2)
-);
-
-CREATE TABLE resource_targets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    resource_id UUID NOT NULL REFERENCES resources(id) ON DELETE CASCADE,
-    target_type TEXT NOT NULL,
-    target_id UUID NOT NULL,
-    attached_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT valid_target_type CHECK (target_type IN ('goal', 'milestone', 'task'))
 );
 
 -- Updates and comments
@@ -98,16 +93,27 @@ CREATE TABLE updates (
     target_id UUID NOT NULL,
     type update_type NOT NULL,
     payload JSONB NOT NULL DEFAULT '{}',
-    creator_id UUID NOT NULL REFERENCES auth.users(id),
+    creator_id UUID NOT NULL REFERENCES public.users(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     mentions TEXT[] DEFAULT '{}',
+    metadata JSONB DEFAULT '{}',
     CONSTRAINT valid_mentions CHECK (array_length(mentions, 1) IS NULL OR array_length(mentions, 1) <= 50)
 );
+
+-- Add reactions to updates table metadata
+ALTER TABLE updates 
+ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT jsonb_build_object(
+  'reactions', '[]'::jsonb,
+  'comments_count', 0
+);
+
+-- Add index for faster metadata queries
+CREATE INDEX IF NOT EXISTS updates_metadata_gin_idx ON updates USING gin (metadata);
 
 CREATE TABLE comments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     content TEXT NOT NULL,
-    author_id UUID NOT NULL REFERENCES auth.users(id),
+    author_id UUID NOT NULL REFERENCES public.users(id),
     update_id UUID NOT NULL REFERENCES updates(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     edited_at TIMESTAMPTZ,

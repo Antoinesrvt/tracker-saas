@@ -4,8 +4,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Card, CardContent } from "@/components/ui/Card/index";
-import { Progress } from "@/components/ui copy/progress";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import {
   MoreVertical,
   Clock,
@@ -19,8 +19,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui copy/dropdown-menu";
-import { Task } from "@/app/dashboard/types";
+} from "@/components/ui/dropdown-menu";
+import { Task } from '@/utils/supabase/queries/tasks';
 
 interface TaskCardProps {
   task: Task;

@@ -1,11 +1,11 @@
-import { Task } from '@/types/tasks';
+import { useGoalContext } from '@/contexts/GoalContext';
+
 import { CheckCircle2 } from 'lucide-react';
 
-interface TasksSectionProps {
-  tasks: Task[];
-}
 
-export const TasksSection = ({ tasks }: TasksSectionProps) => {
+export const TasksSection = () => {
+  const {tasks} = useGoalContext()
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">

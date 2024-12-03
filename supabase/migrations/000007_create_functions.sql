@@ -194,3 +194,40 @@ CREATE TRIGGER handle_updated_at
     BEFORE UPDATE ON team_assignments
     FOR EACH ROW
     EXECUTE PROCEDURE moddatetime(updated_at);
+
+
+-- Add trigger function for automatic team assignment on creation
+CREATE OR REPLACE FUNCTION auth.handle_object_creation()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Insert team assignment for creator as owner
+    INSERT INTO team_assignments (
+        user_id,
+        assignable_type,
+        assignable_id,
+        role
+    ) VALUES (
+        auth.uid(),
+        TG_ARGV[0]::text, -- First argument is the object type
+        NEW.id,
+        'owner'
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Add triggers for each object type
+CREATE TRIGGER handle_organization_creation
+    AFTER INSERT ON organizations
+    FOR EACH ROW
+    EXECUTE FUNCTION auth.handle_object_creation('organization');
+
+CREATE TRIGGER handle_workspace_creation
+    AFTER INSERT ON workspaces
+    FOR EACH ROW
+    EXECUTE FUNCTION auth.handle_object_creation('workspace');
+
+CREATE TRIGGER handle_goal_creation
+    AFTER INSERT ON goals
+    FOR EACH ROW
+    EXECUTE FUNCTION auth.handle_object_creation('goal');

@@ -28,6 +28,9 @@ const ResourcesTab: React.FC<ResourceTabProps> = ({
 }) => {
   const [mounted, setMounted] = useState(false);
 
+
+  // create a context for the resources
+
   useEffect(() => {
     setMounted(true);
   }, []);

@@ -20,13 +20,14 @@ import { Database } from 'types_db';
 import { Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { createGoal } from '@/utils/supabase/queries';
+import { createGoal } from '@/utils/supabase/queries/goals';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
 type Priority = Database['public']['Enums']['task_priority'];
+type GoalType = Database['public']['Enums']['goal_type'];
 
-export const CreateGoalCard = ({ workspaceId }: { workspaceId: string }) => {
+export const CreateGoalCard = ({ workspaceId, type }: { workspaceId: string, type: GoalType }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const supabase = getSupabaseBrowserClient();
@@ -44,21 +45,24 @@ export const CreateGoalCard = ({ workspaceId }: { workspaceId: string }) => {
     setLoading(true);
 
     try {
+      console.log("Creating goal...");
+      console.log(workspaceId);
       const goal = await createGoal(supabase, {
         workspace_id: workspaceId,
         title: formData.title,
         description: formData.description,
         end_date: formData.date,
-        status: "active",
+        status: 'active',
         progress: 0,
-        type: "fondation",
-        config_id: ""
+        type: type,
       });
 
       toast({
         title: "Goal created",
         description: "Your goal has been created successfully.",
       });
+
+      console.log(goal);
 
       setOpen(false);
       setFormData({
